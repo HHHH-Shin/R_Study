@@ -1,0 +1,609 @@
+---
+title: "R4DS Whole game"
+author: "SHH"
+date: "2023-07-03"
+output:
+  pdf_document: 
+    latex_engine: xelatex
+  html_document:
+    df_print: paged
+---
+# Whole game 
+Goal of this part is a rapid overview of the main tools of data science: **importing, tidying, transforming, visualizing**
+
+*** 
+
+## 1. Data Visualization
+### 1.1. Introduction 
+```{r}
+# tidyverse packages
+# install.packages('tidyverse')
+library(tidyverse)
+```
+It tells you which functions from the tidyverse conflict with functions in base R or other packages.
+
+```{r}
+# install.packages('palmerpenguins')
+# install.packages('ggthemes')
+library(palmerpenguins)
+library(ggthemes)
+```
+Use palmerpenguins package, which include the `penguins` dataset. Also the ggthemes package offers a colorblind sage color palette
+
+<br><br><br>
+
+### 2. First Steps
+Do penguins with longer filppers weigh more or less than penguins with shorter flippers? What does the relationship between flipper length and body mass look like? Is it positive? negative? linear? nonlinear? Does the relationship vary by the species of the penguins? How about by the island where the penguin lives? 
+
+<br>
+
+##### The penguins data frame
+- **Variable**: quantity, quality, or property that you can measure
+- **Value**: the state of a variable when you measure it
+- **Observation**: set of measurements made under similar conditions
+- **Tabular data**: set of values, each associated with a variable and an observation. Tabular data is tidy if each value is placed in its own "cell", each variable in its own columnm and each observaation in its own row.
+
+*In the tidyverse, it use special dataframes called tibbles*
+```{r}
+penguins
+```
+```{r}
+glimpse(penguins) # str(penguins)와 비슷
+```
+
+<br>
+
+##### Ultimate goal
+Our ultimate goal is to create visualization displaying the relationship between flipper lengths and body masses of these penguins, taking into consideration the species of the penguin.
+
+<br>
+
+##### Creating a ggplot
+In `ggplot2`, we begin a plot with the function `ggplot()`. It defines a plot object that you then add layers to. <br>
+arguments are <br>
+
+- `data`: dataset to use in the graph
+- `mapping`: defines how variables in our dataset are mapped to visual properties(aesthetic) of our plot
+```{r}
+ggplot(data = penguins)
+```
+
+It creates empty graph that is primed to display the data. We can think of it like an empty canvas we'll paint the reaming layers of our plot onto.
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)
+)
+```
+
+`mapping` argument is always definend in the `aes()` function, and `x`, `y` areguments of `aes()` specify which variables to map to the x and y axes. <br>
+
+We need to define a **geom**: the geometrical object that a plot uses to represent data.
+
+- geom_bar()
+- geom_line()
+- geom_point()
+- geom_boxplot()
+- etc...
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)
+) +
+  geom_point()
+```
+
+Warning message: ggplot2 subscribes to the philosophy that missing values should never silently go missing. 
+
+- Q: What does the relationship between flipper length and body mass look like?
+- A: The relationship appears to be positive, fairly linear, and moderately strong. Penguins with longer flippers are generally larger in terms of their body mass.
+
+<br>
+
+##### Adding aesthetics and layers
+It is always a good idea to be skeptical of any apparent relationship between two variables and ask if there may be other variables that explain or change the nature of this apparent relationship.  
+For example, does the relationship between flipper length and body mass differ by species?
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm,
+                y = body_mass_g,
+                color = species)
+) +
+  geom_point()
+```
+
+**Scaling**: When a categorical variable is mapped to an aesthetic, ggplot2 will automatically assign a unique value of the aesthetic to each unique level of the variable. ggplot2 will also add a legend that explains which values correspond to which levels
+
+<br>
+
+Let's add one more layer: a smooth curve displaying the relationship between body mass and flipper length.
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm,
+                y = body_mass_g,
+                color = species)
+) +
+  geom_point() + 
+  geom_smooth(method = 'lm')
+```
+
+When aesthetic mappings are defined in `ggplot()`, at the global level, they are passed down to each of the subsequent geom layers of the plot.  
+However, each geom function in ggplot2 can also take a `mapping` argument, which allows for aesthetic mappings at the local level.
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm,
+                y = body_mass_g) 
+) +
+  geom_point(mapping = aes(color = species)) +
+  geom_smooth(method = 'lm')
+```
+
+It's generally not a good idea to represent information using only colors on a plot, as people perceive colors differently due to color blindness or other color vision differences.
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm,
+                y = body_mass_g)
+) +
+  geom_point(mapping = aes(color = species, shape = species)) +
+  geom_smooth(method = 'lm')
+```
+
+We can improve the labels of out plot using the `labs()` function in a new layer. <br>
+arguments are
+
+- `title`
+- `subtitle`
+- `x`
+- `y`
+- `color` and `shape`: define the label for the legend
+- `scale_color_colorblind()`: imporve the color palette to be colorblind safe(from ggthemes package)
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm,
+                y = body_mass_g)
+) +
+  geom_point(mapping = aes(color = species, shape = species)) +
+  geom_smooth(method = 'lm') +
+  labs(
+    title = 'Body mass vs. Flipper length',
+    subtitle = 'Dimensions for Adelie, Chinstrap, and Gentoo Penguins',
+    x = 'Flipper length (mm)',
+    y = 'Body mass (g)',
+    color = 'Species',
+    shape = 'Species'
+  ) +
+  scale_color_colorblind()
+```
+
+<br><br>
+
+### 1.2. Visualizing distributions
+How to visualize the distribution of a variable depends on the type of variable 
+
+- `Categorical`
+- `Numerical`
+
+<br>
+
+##### A categorical variable
+A variable is categorical if it can only take one of a small set of values. To examine the distribution of a categoriccal variable, we can use a bar chart.
+```{r}
+ggplot(penguins, aes(x = species)) +
+  geom_bar()
+```
+
+In bar plots of categorical variables with non-ordered levels, its often preferable to reorder the bars based of their frequencies. It requires transforming the variable to a factor and then reordering the levels of that factor.
+```{r}
+ggplot(penguins, aes(x = fct_infreq(species))) +
+  geom_bar()
+```
+
+<br>
+
+##### A numerical variable
+A variable is numerical or quantitative if it can take on a wide range of numerical values. Numerical variables can be continuous or discrete.  
+One commonly used visualization for distributions of continuous variable is a `histogram`
+```{r}
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 200)
+```
+
+A histogram divides the x-axis into equally spaced bins and then uses the height of a bar to display the number of observations that fall in each bin.   
+Since different binwidths can reveal different patterns, we have to explore a variety of binwidths when working with histogram.
+```{r}
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 20)
+```
+```{r}
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 2000)
+```
+
+An alternative visualization for distributions of numerical variables is a `density plot`. A density plot is a smoothed-out version of a histogram. It shows fewer details than a histogram but can make it easier to quickly glean the shape of the distribution, particularly with respect to modes and skewness.
+```{r}
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_density()
+```
+
+<br><br><br>
+
+### 1.3 Visualizing relationhsips
+To visualize a relationship we need to have at least two variables.
+
+<br>
+
+##### A numerical and a categorical variable
+To visualize the relationship between a numerical and a categorical variable we can use `side-by-side box plots`.   
+
+```{r}
+ggplot(penguins, aes(x = species, y = body_mass_g)) +
+  geom_boxplot()
+```
+
+Alternatively, we can make density plots with `geom_density()`.  
+```{r}
+ggplot(penguins, aes(x = body_mass_g, color = species)) +
+  geom_density()
+```
+
+```{r}
+ggplot(penguins, aes(x = body_mass_g, color = species, fill = species)) +
+  geom_density(linewidth = 2, alpha = 0.7)
+```
+
+<br>
+
+##### Two categorical variables
+We can use `stacked bar plot` to visualize the relationship between two categorical variables.
+
+```{r}
+ggplot(penguins, aes(x = island, fill = species)) +
+  geom_bar()
+```
+
+The second plot is a relative frequency plot. It is more useful for comparing species distributions across the islands since it's not affected by the unequal numbers of penguins across the islands.
+```{r}
+ggplot(penguins, aes(x = island, fill = species)) +
+  geom_bar(position = 'fill')
+```
+
+<br>
+
+##### Two numerical variables 
+For visualizing the relationship between two numerical variables, we can use `scatter plot` and `smooth curves`.
+
+```{r}
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point() +
+  geom_smooth()
+```
+
+<br>
+
+##### Three or more variables
+We can incorporate more variables into a plot by mapping them to additional aesthetics. 
+
+```{r}
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(aes(color = species, shape = island))
+```
+
+However adding too many aesthetic mappings to a plot makes it cluttered and difficult to make sense of.  
+Another way is to split our plot into `facets`. To facet out plot by a single variable, use `facet_wrap()`.
+```{r}
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(aes(color = species, shape = species)) +
+  facet_wrap(~island)
+```
+
+<br><br><br>
+
+### 1.4 Saving plots
+`ggsave()` will save the plot most recently created to disk. If we don't specify the `width` and `height` they will be taken from the dimensions of the current plotting device.
+```{r}
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) + 
+  geom_point()
+# ggsave(filename = 'penguin-plot.png')
+# ggsave(filename = 'penguin-plot.pdf')
+```
+
+<br>
+
+***
+
+<br>
+
+## Data transformation 
+### 1. Introduction 
+It's rare that we get the data in exactly the right form we need to make the graph we want. Often we'll need to create some new variables or summaries. Also we may want to rename the variable or reorder the observations.
+
+**Goals**
+- `dplyr` package
+- overview of all the key tools for tranforming a data frame
+- understand pipe, which is important tool when combining verbs
+
+```{r}
+library(nycflights13)
+library(tidyverse)
+```
+
+<br>
+
+##### nycflights13
+To explore the basic `dplyr` verbs, we're going to use `nycflights13::flights`. 
+```{r}
+flights
+```
+
+`flights` is a tibble, a special type of data frame used by the tidyverse. The most important difference between tibbles and data frames is the way tibbles print. They are designed for large datasets, so they only show the first few rows and only the columns that fit on one screen.
+
+- View(tibble): open an interactive scrollable and filterable view
+- print(tibble, width = Inf): show all columns
+- glimpse(tibble)
+
+```{r}
+glimpse(flights)
+```
+
+<br>
+
+##### dplyr basics
+**Common rules of dplyr**
+
+- The first argument is always a data frame 
+- The subsequent arguments typically describe which columns to operate on, using the vairate names 
+- The output is always a new data frame
+
+**pipe operator `|>`**
+- `x |> f(y)`: f(x, y)
+- `x |> f(y) |> g(z)`: g(f(x, y), z)
+
+```{r}
+flights |> 
+  filter(dest == 'IAH') |> 
+  group_by(year, month, day) |> 
+  summarize(
+    arr_delay = mean(arr_delay, na.rm = T)
+  )
+```
+
+dplyr's verbs are organized into four groups based on what they operate on:
+
+- rows
+- columns
+- groups
+- tables
+
+<br><br><br>
+
+### 2. Rows 
+The most important verbs that operate on rows of a dataset are 
+
+- `filter()`
+- `arrange()`
+- `distinct()`
+
+<br>
+
+##### filter()
+`filter()` allows us to keep rows based on the values of the columns. When we run `filter()`, dplyr executes the filtering operation, creating a new data frame. It doesn't modify the existing dataset. So if we want to save the result, we must use the assignment operator `<-`. 
+
+arguments are:
+
+- data frame
+- conditions
+
+```{r}
+# departed more than 120 minutes late
+flights |> 
+  filter(dep_delay > 120)
+```
+
+we can also use `< <= > >= == !=` and combine conditions with `& , |`. There is a useful shortcut when we are combining | and ==: `%in%`.
+
+```{r}
+# flights that departed on January 1
+flights |> 
+  filter(month == 1 & day == 1)
+```
+
+```{r}
+# flights that departed in January or Februray
+flights |> 
+  filter(month == 1 | month == 2)
+```
+
+
+```{r}
+flights |> 
+  filter(month %in% c(1, 2))
+```
+
+```{r}
+jan1 <- flights |> 
+  filter(month == 1 & day == 1)
+jan1
+```
+
+<br>
+
+### arrange()
+`arrange()` changes the order of the rows based on the value of the columns. If we provide more than one columns name, each additional column will be used to break ties in the values of preceding columns. Ascending is defualt and when we want to order by descending, use desc(column name).
+
+arguments are:
+
+- data frame 
+- set of columns
+
+```{r}
+# 가장 빨리 출발한 순서로 정렬
+flights |> 
+  arrange(year, month, day, dep_time)
+```
+
+```{r}
+# 가장 지연이 오래된 순서로 정렬
+flights |> 
+  arrange(desc(dep_delay))
+```
+
+<br>
+
+### distinct()
+`distinct()` finds all the unique rows in a dataset. However, most of the time, we'll want the distinct combination of some variables, so we can also optionally supply column names. If we want to keep other columns when filtering for unique rows, we can use the `.keep_all = T`
+
+```{r}
+# remove duplicate rows
+flights |> 
+  distinct()
+```
+
+```{r}
+# find all unique origin and destination pairs
+flights |> 
+  distinct(origin, dest)
+```
+
+```{r}
+flights |> 
+  distinct(origin, dest, .keep_all = T)
+```
+
+```{r}
+# count(): find the number of occurrences
+# sort = T: arrange then in descending order of number of occurrences
+flights |> 
+  count(origin, dest, sort = T)
+```
+
+<br><br><br>
+
+### 3. columns 
+There are four important verbs that affect the columns.
+
+- `mutate()`
+- `select()`
+- `rename()`
+- `relocate()``
+
+<br>
+
+##### mutate()
+The job of `mutate()` is to add new columns that are calculated from the existing columns. 
+
+By default, `mutate()` adds new columns on the right hand side of our dataset. `.before` argument add the variables to the left hand side. Also we can use `.after` argument and both in `.before` and `.after` we can use variable name instead of a position.
+
+Alternatively, we can control which variables are kept with the `.keep` argument. 
+
+```{r}
+flights |> 
+  mutate(
+    gain = dep_delay - arr_delay,
+    speed = distance / air_time * 60
+  )
+```
+
+```{r}
+flights |> mutate(
+  gain = dep_delay - arr_delay,
+  speed = distance / air_time * 60,
+  .before = 1
+)
+```
+
+```{r}
+flights |> 
+  mutate(
+    gain = dep_delay - arr_delay,
+    speed = distance / air_time * 60,
+    .after = day
+  )
+```
+
+```{r}
+flights |> 
+  mutate(
+    gain = dep_delay - arr_delay,
+    hours = air_time / 60,
+    gain_per_hour = gain / hours,
+    .keep = 'used'
+  )
+```
+
+<br>
+
+##### select()
+`select()` allows us to rapidly zoom in on a useful subset using operations based on the names of the variables.
+
+- select columns by name
+```{r}
+flights |> 
+  select(year, month, day)
+```
+
+- select all columns between year and day
+```{r}
+flights |> 
+  select(year:day)
+```
+
+- select all columns except those from year to day
+```{r}
+# can also use - instead of !
+flights |> 
+  select(!year:day)
+```
+
+- select all columns that are characters
+```{r}
+flights |> 
+  select(where(is.character))
+```
+
+There are a number of helper functions we can use within `select()`
+
+- `starts_with()`
+- `ends_with()`
+- `contains()`
+- `num_range('x', 1:3)`
+
+We can rename variables using `=`
+```{r}
+flights |> 
+  select(tail_num = tailnum)
+```
+
+<br>
+
+##### rename()
+```{r}
+flights |> 
+  rename(tail_num = tailnum)
+```
+
+<br>
+
+##### relocate()
+Use `relocate()` to move variables around. By default `relocate()` moves variables to the front. We can also specify where to put them using `.before` and `.after` arguments just like in `mutate()`.
+```{r}
+flights |> 
+  relocate(time_hour, air_time)
+```
+
+
+```{r}
+flights |> 
+  relocate(year:dep_time, .after = time_hour)
+```
+```{r}
+flights |> 
+  relocate(starts_with('arr'), .before = dep_time)
+```
+
