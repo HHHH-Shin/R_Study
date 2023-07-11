@@ -607,3 +607,58 @@ flights |>
   relocate(starts_with('arr'), .before = dep_time)
 ```
 
+<br><br><br>
+
+### 4. The pipe 
+Pipe's real power arises when we start to combine multiple verbs.
+```{r}
+# find the fast flights to Houston's IAH airport
+flights |> 
+  filter(dest == 'IAH') |> 
+  mutate(speed = distance / air_time * 60) |> 
+  select(year:day, dep_time, carrier, flight, speed) |> 
+  arrange(desc(speed))
+```
+
+```{r}
+# do not use pipe 
+arrange(
+   select(
+    mutate(
+      filter(flights,
+           dest == 'IAH'),
+      speed = distance / air_time * 60
+    ),
+    year:day, dep_time, carrier, flight, speed
+  ),
+  desc(sp)
+)
+
+
+```
+
+```{r}
+# do not use pipe2
+flights1 <- filter(flights, dest == 'IAH')
+flights2 <- mutate(flights1, speed = distance / air_time * 60)
+flights3 <- select(flights2, year:day, dep_time, carrier, flight, speed)
+arrange(flights3, desc(speed))
+```
+
+<br><br><br>
+
+### 5. Groups
+
+- `group_by()`
+- `summarise()`
+
+##### group_by()
+We can use `group_by()` to divide out dataset into groups. `group_by()` doesn't change the data but subsequent operation will work by group
+```{r}
+flights |> 
+  group_by(month)
+```
+
+<br>
+
+##### summarize()
